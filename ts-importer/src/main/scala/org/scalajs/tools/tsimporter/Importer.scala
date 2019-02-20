@@ -36,25 +36,31 @@ class Importer(val output: java.io.PrintWriter) {
           processDecl(sym, innerDecl)
 
       case TopLevelExportDecl(IdentName(name)) =>
+        println(s"I'm a top level export decl, short and stout: $name")
         // print nothing, since the value specified by the identifier is printed elsewhere.
 
       case VarDecl(IdentName(name), Some(tpe @ ObjectType(members))) =>
+        println(s"I'm a var, short and stout: $name")
         val sym = owner.getModuleOrCreate(name)
         processMembersDecls(owner, sym, members)
 
       case ConstDecl(IdentName(name), Some(tpe @ ObjectType(members))) =>
+        println(s"I'm a const, short and stout: $name")
         val sym = owner.getModuleOrCreate(name)
         processMembersDecls(owner, sym, members)
 
       case LetDecl(IdentName(name), Some(tpe @ ObjectType(members))) =>
+        println(s"I'm a let, short and stout: $name")
         val sym = owner.getModuleOrCreate(name)
         processMembersDecls(owner, sym, members)
 
       case TypeDecl(TypeNameName(name), tpe @ ObjectType(members)) =>
+        println(s"I'm a type, short and stout: $name")
         val sym = owner.getClassOrCreate(name)
         processMembersDecls(owner, sym, members)
 
       case EnumDecl(TypeNameName(name), members) =>
+        println(s"I'm a enum, short and stout: $name")
         // Type
         val tsym = owner.getClassOrCreate(name)
         tsym.isSealed = true
@@ -72,6 +78,7 @@ class Importer(val output: java.io.PrintWriter) {
         applySym.isBracketAccess = true
 
       case ClassDecl(TypeNameName(name), tparams, parent, implements, members, isAbstract) =>
+        println(s"I'm a class, short and stout: $name")
         val sym = owner.getClassOrCreate(name)
         sym.isAbstract = isAbstract
         sym.isTrait = false
@@ -101,6 +108,7 @@ class Importer(val output: java.io.PrintWriter) {
         processMembersDecls(owner, sym, members)
 
       case TypeAliasDecl(TypeNameName(name), tparams, alias) =>
+        println(s"I'm a type alias, short and stout: $name")
         val sym = owner.newTypeAlias(name)
         sym.tparams ++= typeParamsToScala(tparams)
         sym.alias = typeToScala(alias)
@@ -353,7 +361,14 @@ class Importer(val output: java.io.PrintWriter) {
           }
         }
 
-        TypeRef.Union(visit(tpe, Nil).distinct)
+        TypeRef.Union({
+          val refs = visit(tpe, Nil)
+          if(refs.forall{ case StringLiteral(_) => true } ){
+            EnumeratumRef(tpe, refs.map(_.typeName))
+          } else {
+            refs.distinct
+          }
+        })
 
       case TypeQuery(expr) =>
         TypeRef.Singleton(QualifiedName((expr.qualifier :+ expr.name).map(

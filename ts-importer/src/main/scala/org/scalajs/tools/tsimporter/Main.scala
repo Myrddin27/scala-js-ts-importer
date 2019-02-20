@@ -5,15 +5,19 @@
 
 package org.scalajs.tools.tsimporter
 
-import java.io.{ Console => _, Reader => _, _ }
+import java.io.{Console => _, Reader => _, _}
 
-import Trees._
-
-import scala.util.parsing.input._
-import parser.TSDefParser
+import scala.collection.immutable.PagedSeq
+import scala.util.parsing.input.PagedSeqReader
 
 /** Entry point for the TypeScript importer of Scala.js */
 object Main {
+  import java.io.{ Console => _, Reader => _, _ }
+
+  import Trees._
+
+  import parser.TSDefParser
+
   def main(args: Array[String]) {
     for (config <- Config.parser.parse(args, Config())) {
       val outputPackage = config.packageName
@@ -51,10 +55,10 @@ object Main {
     new Importer(output)(definitions, outputPackage)
   }
 
-  private def parseDefinitions(reader: Reader[Char]): Either[String, List[DeclTree]] = {
+  private def parseDefinitions(reader: scala.util.parsing.input.Reader[Char]): Either[String, List[DeclTree]] = {
     val parser = new TSDefParser
     parser.parseDefinitions(reader) match {
-      case parser.Success(rawCode, _) =>
+      case parser.Success(rawCode: List[DeclTree], _) =>
         Right(rawCode)
 
       case parser.NoSuccess(msg, next) =>

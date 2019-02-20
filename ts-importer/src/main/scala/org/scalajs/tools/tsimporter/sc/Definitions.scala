@@ -220,6 +220,8 @@ class TypeAliasSymbol(nme: Name) extends Symbol(nme) {
       (if (tparams.isEmpty) "" else tparams.mkString("<", ", ", ">")))
 }
 
+class EnumeratumSymbol{}
+
 class FieldSymbol(nme: Name, val modifiers: Modifiers) extends Symbol(nme) with JSNameable {
   var tpe: TypeRef = TypeRef.Any
 
